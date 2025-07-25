@@ -5,4 +5,4 @@ Tetris on an Arduino Mega 2560 board, using an 8x8 LED matrix(1588BS) for graphi
 - joystick (QYF-860)
 - 8x8 LED matrix(1588BS)
 - jumpwires
-- breadboard (830 points, you can use a much smaller one)
+- 2 breadboard (830 points, you can use a much smaller one)
