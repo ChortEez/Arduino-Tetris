@@ -5,8 +5,10 @@
 3. Figure out how joyStick work
 4. Build.
 
-## Feature
+## Function
 - Game
 - Sound effects
 - ON/OFF button (If game off game title displayed)
 - Sound ON/OFF button
+## Feature
+- Score trecker
