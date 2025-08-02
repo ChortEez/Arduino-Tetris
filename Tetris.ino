@@ -15,9 +15,9 @@
 // const int anode5 = 36;
 // const int anode2= 37;
 
-joystickXinput = A0;
-joystickYinput = A1;
-joystickBinput = A2;
+const int joystickXinput = A0;
+const int joystickYinput = A1;
+const int joystickBinput = A2;
 
 
 const int row[8] = {33, 24, 37, 30, 26, 36, 27, 34}; // anode
@@ -33,14 +33,24 @@ for (int i = 0; i < 8; i++){
   pinMode(row[i], OUTPUT);
   pinMode(col[i], OUTPUT);
 } 
+pinMode(joystickXvalue, INPUT);
+pinMode(joystickYvalue, INPUT);
+pinMode(joystickBvalue, INPUT);
   
 check();
 clear();
 digitalWrite(row[0], HIGH);
 digitalWrite(col[0], LOW);
+
 }
 
 void loop(){
+  Serial.println(analogRead(joystickXvalue));
+  delay(250);
+  Serial.println(analogRead(joystickYvalue));
+  delay(250);
+  Serial.println(analogRead(joystickBvalue));
+  delay(250);
 }
 
 void check (){ // check if all connected right
