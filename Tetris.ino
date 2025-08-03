@@ -24,8 +24,12 @@ const int row[8] = {33, 24, 37, 30, 26, 36, 27, 34}; // anode
 const int col[8] = {25, 28, 29, 32, 35, 31, 23, 22}; // cathod
 
 int joystickXvalue = 0;
-int joystickYvalue = 0;
-int joystickBvalue = 0;
+int joystickYvalue = 1;
+int joystickBvalue = 2;
+
+const unsigned long interval = 1000;  // game interval
+unsigned long lastTime = 0;
+
 
 void setup() {
 Serial.begin(9600);
@@ -45,12 +49,24 @@ digitalWrite(col[0], LOW);
 }
 
 void loop(){
-  Serial.println(analogRead(joystickXvalue));
-  delay(250);
-  Serial.println(analogRead(joystickYvalue));
-  delay(250);
-  Serial.println(analogRead(joystickBvalue));
-  delay(250);
+  if (millis() - lastTime > interval){
+    joystickDebug();
+
+    lastTime = millis();
+  }
+}
+
+void joystickDebug(){
+  Serial.print("X:");
+  Serial.print(analogRead(joystickXvalue));
+  Serial.print("\t");
+  Serial.print("Y:");
+  Serial.print(analogRead(joystickYvalue));
+  Serial.print("\t");
+  Serial.print("B:");
+  Serial.print(digitalRead(joystickBvalue));
+  Serial.print("\t");
+  Serial.println(" ");
 }
 
 void check (){ // check if all connected right
