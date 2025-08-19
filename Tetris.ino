@@ -14,6 +14,7 @@
 // const int cathodeE = 35;
 // const int anode5 = 36;
 // const int anode2= 37;
+const int soundPin  = 8;
 
 
 
@@ -41,6 +42,7 @@ int joystickYvalue = 1;
 int joystickBvalue = 2;
 
 const unsigned long interval = 800;  // game interval
+const unsigned long joystickInterval = 250; // Інтервал оновлення позиції джойстику
 const int updateTime = 0; // Швидкість оновлення матриці
 unsigned long lastTime = 0; // Зміна для рахування мілісекунд які пройшли з початку гри.
 int matrixPosX = 0;
@@ -60,6 +62,8 @@ pinMode(joystickXvalue, INPUT);
 pinMode(joystickYvalue, INPUT);
 pinMode(joystickBvalue, INPUT);
 
+pinMode(soundPin, OUTPUT);
+
 check();
 clear();
 Debug();
@@ -74,7 +78,9 @@ void loop(){
     Debug();
     // DebugField();
     getCommand();
+    playSound();
     fallDown();
+    
     
 
 
@@ -86,7 +92,7 @@ void getCommand(){ // need to write some code
   joystickYvalue = analogRead(joystickYinput);
   joystickBvalue = digitalRead(joystickBinput);
 
-  if (joystickXvalue == 1023 && joystickYvalue < 1023){ // joystick is RIGHT
+  if (joystickXvalue == 1023 && joystickYvalue < 1023){ // joystick is RIGHT. Тут йобнута помилка, якщо крапка рухається по діагоналі то крапку яка вже стоїть - стирає
     erasePixel(matrixPosX, matrixPosY);
     matrixPosX++;
     drawPixel(matrixPosX, matrixPosY);
@@ -219,5 +225,7 @@ void DebugField() { //Написано ШІ
 }
 
 
-
+void playSound(){
+  tone(soundPin, 25, 25); // 1 kHz tone
+}
 
