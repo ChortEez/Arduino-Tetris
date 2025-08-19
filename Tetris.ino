@@ -15,6 +15,8 @@
 // const int anode5 = 36;
 // const int anode2= 37;
 
+
+
 const int joystickXinput = A0;
 const int joystickYinput = A1;
 const int joystickBinput = A2;
@@ -22,13 +24,30 @@ const int joystickBinput = A2;
 
 const int row[8] = {33, 24, 37, 30, 26, 36, 27, 34}; // anode
 const int col[8] = {25, 28, 29, 32, 35, 31, 23, 22}; // cathod
+int field[8][8] = {
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0}
+};
+
 
 int joystickXvalue = 0;
 int joystickYvalue = 1;
 int joystickBvalue = 2;
 
-const unsigned long interval = 1000;  // game interval
-unsigned long lastTime = 0;
+const unsigned long interval = 800;  // game interval
+const int updateTime = 0; // Швидкість оновлення матриці
+unsigned long lastTime = 0; // Зміна для рахування мілісекунд які пройшли з початку гри.
+int matrixPosX = 0;
+int matrixPosY = 0;
+String direction;
+
+
 
 
 void setup() {
@@ -40,32 +59,65 @@ for (int i = 0; i < 8; i++){
 pinMode(joystickXvalue, INPUT);
 pinMode(joystickYvalue, INPUT);
 pinMode(joystickBvalue, INPUT);
-  
+
 check();
 clear();
-digitalWrite(row[0], HIGH);
-digitalWrite(col[0], LOW);
+Debug();
+newFigure();
 
 }
 
 void loop(){
-  if (millis() - lastTime > interval){
-    joystickDebug();
+  matrixRefresh();
+
+  if (millis() - lastTime > interval){ // Внутрішньоігровий таймер який не зупиняє час.
+    Debug();
+    // DebugField();
+    getCommand();
+    fallDown();
+    
+
 
     lastTime = millis();
   }
 }
+void getCommand(){ // need to write some code
+  joystickXvalue = analogRead(joystickXinput);
+  joystickYvalue = analogRead(joystickYinput);
+  joystickBvalue = digitalRead(joystickBinput);
 
-void joystickDebug(){
+  if (joystickXvalue == 1023 && joystickYvalue < 1023){ // joystick is RIGHT
+    erasePixel(matrixPosX, matrixPosY);
+    matrixPosX++;
+    drawPixel(matrixPosX, matrixPosY);
+    direction = "RIGHT";
+  } else if (joystickXvalue == 0 && joystickYvalue < 1023){ // joystick is LEFT
+    erasePixel(matrixPosX, matrixPosY);
+    matrixPosX--;
+    drawPixel (matrixPosX, matrixPosY);
+    direction = "LEFT";
+  } 
+}
+
+void Debug(){
   Serial.print("X:");
-  Serial.print(analogRead(joystickXvalue));
+  Serial.print(analogRead(joystickXinput));
   Serial.print("\t");
   Serial.print("Y:");
-  Serial.print(analogRead(joystickYvalue));
+  Serial.print(analogRead(joystickYinput));
   Serial.print("\t");
   Serial.print("B:");
-  Serial.print(digitalRead(joystickBvalue));
+  Serial.print(analogRead(joystickBinput));
   Serial.print("\t");
+
+  Serial.print("matrixX:");
+  Serial.print(matrixPosX);
+  Serial.print("\t");
+  Serial.print("matrixY:");
+  Serial.print(matrixPosY);
+  Serial.print("\t");
+
+
   Serial.println(" ");
 }
 
@@ -73,14 +125,99 @@ void check (){ // check if all connected right
   for (int i = 0; i < 8; i++){
     digitalWrite(row[i], HIGH);
     digitalWrite(col[i], LOW);
-    delay(100);
+    delay(75);
   }
 }
 void clear (){ // clear LED matrix
   for (int i = 0; i < 8; i++){
     digitalWrite(row[i], LOW);
     digitalWrite(col[i], HIGH);
-    delay(100);
   }
+}
+void drawPixel(int x, int y){ // Вносить 1 в массив поля
+  matrixPosX = x;
+  matrixPosY = y;
+  field[x][y] = 1;
+
+}
+void erasePixel(int x, int y){ // Прибирає 1 і вносить 0 в масив поля
+  matrixPosX = x;
+  matrixPosY = y;
+  field[x][y] = 0;
+}
+void fallDown(){
+  if (matrixPosY < 7){
+    erasePixel(matrixPosX, matrixPosY);
+    matrixPosY++;
+    collisionCheck();
+    drawPixel(matrixPosX, matrixPosY);
+    
+   } else if (matrixPosY == 7){
+    drawPixel(matrixPosX, matrixPosY);
+    newFigure();
+   }
   
 }
+void newFigure(){
+  // matrixPosX = 0;
+  // matrixPosY = 4;
+  drawPixel(4, 0);
+}
+void collisionCheck(){
+  int tempPositionX = matrixPosX;
+  int tempPositionY = matrixPosY;
+  tempPositionY++;
+  // if (direction == String("RIGHT")){
+  //   tempPositionX++;
+  //   if (field[tempPositionX][tempPositionY] == 1){
+  //     // matrixPosX = tempPositionX;
+  //     drawPixel(matrixPosX,matrixPosY);
+  //     newFigure();
+  //   }
+  // } else if (direction == String("LEFT")){
+  //   tempPositionX--;
+  //   if (field[tempPositionX][tempPositionY]){
+  //     // matrixPosX = tempPositionX;
+  //     drawPixel(matrixPosX, matrixPosY);
+  //     newFigure();
+  //   } 
+   if (field[matrixPosX][tempPositionY] == 1){
+    // matrixPosY = tempPositionY;
+    drawPixel(matrixPosX, matrixPosY);
+    newFigure();
+  }
+
+
+}
+void matrixRefresh(){ // Мультиплексування матриці, швидко перевіряє кожен рядок і засвічує колонку що горить.
+  for (int y = 0; y < 8; y++){
+    digitalWrite(row[y], HIGH);
+    for (int x = 0; x < 8; x++){
+      if (field[x][y] == 1){
+      digitalWrite(col[x], LOW);
+    } 
+    delay(updateTime);
+    digitalWrite(col[x], HIGH);
+    }
+    // delay(updateTime);
+    digitalWrite(row[y], LOW);
+  }
+}
+void DebugField() { //Написано ШІ
+  Serial.println("===== LED MATRIX FIELD =====");
+  for (int y = 0; y < 8; y++) {
+    for (int x = 0; x < 8; x++) {
+      if (field[x][y] == 1) {
+        Serial.print("# ");
+      } else {
+        Serial.print(". ");
+      }
+    }
+    Serial.println();
+  }
+  Serial.println("============================");
+}
+
+
+
+
