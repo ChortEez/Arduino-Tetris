@@ -41,7 +41,7 @@ int joystickXvalue = 0;
 int joystickYvalue = 1;
 int joystickBvalue = 2;
 
-const unsigned long interval = 800;  // game interval
+const unsigned long interval = 200;  // game interval
 const unsigned long joystickInterval = 250; // Інтервал оновлення позиції джойстику
 const int updateTime = 0; // Швидкість оновлення матриці
 unsigned long lastTime = 0; // Зміна для рахування мілісекунд які пройшли з початку гри.
@@ -75,11 +75,13 @@ void loop(){
   matrixRefresh();
 
   if (millis() - lastTime > interval){ // Внутрішньоігровий таймер який не зупиняє час.
-    Debug();
+    // Debug();
     // DebugField();
     getCommand();
-    playSound();
+    // playSound();
+    checkIsRowFull();
     fallDown();
+
     
     
 
@@ -224,7 +226,30 @@ void DebugField() { //Написано ШІ
   Serial.println("============================");
 }
 
+void checkIsRowFull(){ // Коротше, треба пробігтися по всіх рядках, якщо перший елемент - повний. То потрібно йти далі. Якщо ні, то переходиш на наступний рядок. Зараз голова не варить...
+bool rowFull;
+ for(int y = 7; y > - 1; y--){ // Йдемо по рядах починаючи з останнього. Рахуємо знизу, так логічніше
+    // if (field[x][y] == 1){ // Якщо рядок X, і його елемент Y = 1 то запускається перевірка на наступний елемент
+      for (int x = 0; x < 8; x++){ 
+        if (field[x][y] == 1) {
+          rowFull = true;
+        } else {
+          rowFull = false;
+          break;
+        }
+      }
+    if (rowFull){
+    eraseRow(y);
+    }
+    } 
+    
+    }
 
+void eraseRow(int y){
+  for (int x = 0; x < 9; x++){
+    erasePixel(x, y);
+  }
+}
 void playSound(){
   tone(soundPin, 25, 25); // 1 kHz tone
 }
