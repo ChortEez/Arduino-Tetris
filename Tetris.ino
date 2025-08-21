@@ -35,11 +35,15 @@ int field[8][8] = {
   {0,0,0,0,0,0,0,0},
   {0,0,0,0,0,0,0,0}
 };
+int col[2][1] = {
+                {2},
+                {2} 
+                };
 
 
 int joystickXvalue = 0;
-int joystickYvalue = 1;
-int joystickBvalue = 2;
+int joystickYvalue = 0;
+int joystickBvalue = 0;
 
 const unsigned long interval = 200;  // game interval
 const unsigned long joystickInterval = 250; // Інтервал оновлення позиції джойстику
@@ -48,6 +52,9 @@ unsigned long lastTime = 0; // Зміна для рахування мілісе
 int matrixPosX = 0;
 int matrixPosY = 0;
 String direction;
+
+// int tempPositionX = matrixPosX++;
+// int tempPositionY = matrixPosY++;
 
 
 
@@ -94,16 +101,21 @@ void getCommand(){ // need to write some code
   joystickYvalue = analogRead(joystickYinput);
   joystickBvalue = digitalRead(joystickBinput);
 
-  if (joystickXvalue == 1023 && joystickYvalue < 1023){ // joystick is RIGHT. Тут йобнута помилка, якщо крапка рухається по діагоналі то крапку яка вже стоїть - стирає
-    erasePixel(matrixPosX, matrixPosY);
-    matrixPosX++;
-    drawPixel(matrixPosX, matrixPosY);
-    direction = "RIGHT";
-  } else if (joystickXvalue == 0 && joystickYvalue < 1023){ // joystick is LEFT
-    erasePixel(matrixPosX, matrixPosY);
-    matrixPosX--;
-    drawPixel (matrixPosX, matrixPosY);
-    direction = "LEFT";
+  if (joystickXvalue == 1023 && joystickYvalue < 1023 && matrixPosX  < 7){ // joystick is RIGHT. Тут йобнута помилка, якщо крапка рухається по діагоналі то крапку яка вже стоїть - стирає. Функція перевіряє й також чи не виходить за межі
+    if (field[matrixPosX+1][matrixPosY]== 0){
+      erasePixel(matrixPosX, matrixPosY);
+      matrixPosX++;
+      drawPixel(matrixPosX, matrixPosY);
+      direction = "RIGHT";
+    }
+    
+  } else if (joystickXvalue == 0 && joystickYvalue < 1023 && matrixPosX  > 0){ // joystick is LEFT. Перевірка на вихід за межі
+    if (field[matrixPosX-1][matrixPosY] == 0){
+      erasePixel(matrixPosX, matrixPosY);
+      matrixPosX--;
+      drawPixel (matrixPosX, matrixPosY);
+      direction = "LEFT";
+    }
   } 
 }
 
@@ -146,7 +158,9 @@ void drawPixel(int x, int y){ // Вносить 1 в массив поля
   matrixPosX = x;
   matrixPosY = y;
   field[x][y] = 1;
-
+}
+void permanentDrawPixel(int x, int y){
+  field[x][y] = 2;
 }
 void erasePixel(int x, int y){ // Прибирає 1 і вносить 0 в масив поля
   matrixPosX = x;
@@ -154,23 +168,30 @@ void erasePixel(int x, int y){ // Прибирає 1 і вносить 0 в ма
   field[x][y] = 0;
 }
 void fallDown(){
-  if (matrixPosY < 7){
-    erasePixel(matrixPosX, matrixPosY);
+  if (matrixPosY < 7 && field[matrixPosX][matrixPosY + 1] != 2){ // Якщо позиція нуль, то піксель "Падає" 
+    erasePixel(matrixPosX, matrixPosY); // Стирання пікселя
+    // tempPositionY++;
     matrixPosY++;
     collisionCheck();
     drawPixel(matrixPosX, matrixPosY);
     
    } else if (matrixPosY == 7){
-    drawPixel(matrixPosX, matrixPosY);
+    permanentDrawPixel(matrixPosX, matrixPosY);
+    newFigure();
+   } else if (field[matrixPosX][matrixPosY + 1] == 2){
+    permanentDrawPixel(matrixPosX, matrixPosY);
     newFigure();
    }
   
 }
 void newFigure(){
-  // matrixPosX = 0;
-  // matrixPosY = 4;
-  drawPixel(4, 0);
+matrixPosX = random(0,8);
+  if (field[matrixPosX][0] ==0){ // Перевірка чи не зайнята позиція де має з'явитися фігура
+    drawPixel(matrixPosX, 0); // Рандомна позиція фігури
+  }
+  
 }
+
 void collisionCheck(){
   int tempPositionX = matrixPosX;
   int tempPositionY = matrixPosY;
@@ -201,7 +222,7 @@ void matrixRefresh(){ // Мультиплексування матриці, шв
   for (int y = 0; y < 8; y++){
     digitalWrite(row[y], HIGH);
     for (int x = 0; x < 8; x++){
-      if (field[x][y] == 1){
+      if (field[x][y] == 1 || field[x][y] == 2){
       digitalWrite(col[x], LOW);
     } 
     delay(updateTime);
@@ -216,9 +237,11 @@ void DebugField() { //Написано ШІ
   for (int y = 0; y < 8; y++) {
     for (int x = 0; x < 8; x++) {
       if (field[x][y] == 1) {
-        Serial.print("# ");
-      } else {
-        Serial.print(". ");
+        Serial.print("1 ");
+      } else if (field[x][y] == 2) {
+        Serial.print("2 ");
+      } else{
+        Serial.print("0 ");
       }
     }
     Serial.println();
@@ -231,7 +254,7 @@ bool rowFull;
  for(int y = 7; y > - 1; y--){ // Йдемо по рядах починаючи з останнього. Рахуємо знизу, так логічніше
     // if (field[x][y] == 1){ // Якщо рядок X, і його елемент Y = 1 то запускається перевірка на наступний елемент
       for (int x = 0; x < 8; x++){ 
-        if (field[x][y] == 1) {
+        if (field[x][y] == 1 || field[x][y] == 2) {
           rowFull = true;
         } else {
           rowFull = false;
